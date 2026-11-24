@@ -1,18 +1,50 @@
-name: Test NARESH-KUMAR Runner
+name: Multi-Stage Dependent Pipeline
 
 on:
-  workflow_dispatch: # Lets you click "Run workflow" manually
+  workflow_dispatch:
 
 jobs:
-  test-job:
+  # Stage 1: Runs first
+  build:
     runs-on: [self-hosted, Linux, X64]
-
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
 
-      - name: Verify Linux runner details
+      - name: Build step
         run: |
-          echo "Connected to: $(hostname)"
-          echo "OS Info: $(uname -a)"
-          echo "Workspace path: $GITHUB_WORKSPACE"
+          echo "Stage 1: Building application on $(hostname)..."
+          mkdir -p build_output
+          echo "Build artifact v1.0" > build_output/app.txt
+
+      # Optional: Save files to pass to the next job
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-build
+          path: build_output/
+
+  # Stage 2: Waits until 'build' succeeds
+  test:
+    runs-on: [self-hosted, Linux, X64]
+    needs: build
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-build
+          path: build_output/
+
+      - name: Run tests
+        run: |
+          echo "Stage 2: Testing artifact..."
+          cat build_output/app.txt
+
+  # Stage 3: Waits until BOTH 'build' and 'test' succeed
+  deploy:
+    runs-on: [self-hosted, Linux, X64]
+    needs: [build, test]
+    steps:
+      - name: Deploy application
+        run: |
+          echo "Stage 3: All checks passed. Deploying on $(hostname)!"
