@@ -1,24 +1,18 @@
-name: Self-Hosted Sample Pipeline
+name: Test NARESH-KUMAR Runner
 
 on:
-  push:
-    branches: [ main ]
-  workflow_dispatch: # Allows manual runs from the GitHub Actions tab
+  workflow_dispatch: # Lets you click "Run workflow" manually
 
 jobs:
-  build-and-test:
-    runs-on: self-hosted # Routes the job to your own machine
+  test-job:
+    runs-on: [self-hosted, Linux, X64]
 
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
 
-      - name: Verify runner environment
+      - name: Verify Linux runner details
         run: |
-          echo "Running on host: $(hostname)"
-          echo "Current user: $(whoami)"
-          echo "Working directory: $(pwd)"
-
-      - name: Run sample build/test step
-        run: |
-          echo "Running your custom build or test commands here..."
+          echo "Connected to: $(hostname)"
+          echo "OS Info: $(uname -a)"
+          echo "Workspace path: $GITHUB_WORKSPACE"
